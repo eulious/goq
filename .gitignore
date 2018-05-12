@@ -1,0 +1,5 @@
+*/
+*.txt
+*.log
+tags
+.DS_Store

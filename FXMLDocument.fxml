@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane id="AnchorPane" fx:id="pane" prefHeight="400" prefWidth="800" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller">
+    <children>
+        <Button fx:id="newbutton" layoutX="274.0" layoutY="119.0" onAction="#handleNewButton" prefHeight="27.0" prefWidth="70.0" text="指手探索" />
+      <Canvas fx:id="canvas" height="200.0" layoutX="58.0" layoutY="32.0" width="200.0" />
+      
+      <Canvas fx:id="graph" height="85.0" layoutX="64.0" layoutY="291.0" width="503.0" />
+      <Label fx:id="genlabel" layoutX="79.0" layoutY="248.0" text="genmove">
+         <font>
+            <Font size="21.0" />
+         </font></Label>
+      <Button fx:id="pastebtn" layoutX="274.0" layoutY="32.0" mnemonicParsing="false" onAction="#handlePasteButton" text="棋譜貼付" />
+      <Button fx:id="ponderbtn" layoutX="274.0" layoutY="76.0" mnemonicParsing="false" onAction="#handlePonderButton" prefHeight="27.0" prefWidth="70.0" text="棋譜解析" />
+      <TableView fx:id="leaf" layoutX="582.0" layoutY="32.0" prefHeight="352.0" prefWidth="167.0">
+         <columns>
+            <TableColumn fx:id="handcol" prefWidth="50.0" text="Hand" />
+            <TableColumn fx:id="colorcol" prefWidth="42.0" text="Color" />
+            <TableColumn fx:id="pvcol" prefWidth="46.0" text="Pv" />
+         </columns>
+      </TableView>
+      <TreeView fx:id="tree" layoutX="367.0" layoutY="32.0" prefHeight="200.0" prefWidth="200.0" />
+    </children>
+</AnchorPane>
