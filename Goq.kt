@@ -10,6 +10,7 @@ import javafx.scene.canvas.Canvas
 import javafx.scene.control.*
 import java.net.URL
 import javafx.scene.control.cell.PropertyValueFactory
+import javafx.scene.input.KeyEvent
 import java.util.ResourceBundle
 import javafx.scene.layout.AnchorPane
 
@@ -29,7 +30,7 @@ class Controller : Initializable {
     @FXML lateinit var canvas: Canvas
     @FXML lateinit var graph: Canvas
     @FXML lateinit var pane: AnchorPane
-    @FXML lateinit var leaf: TableView<Any>
+    @FXML lateinit var leaf: TableView<Leaf>
     @FXML lateinit var handcol: TableColumn<Any, Any>
     @FXML lateinit var pvcol: TableColumn<Any, Any>
     @FXML lateinit var colorcol: TableColumn<Any, Any>
@@ -44,8 +45,23 @@ class Controller : Initializable {
         pane.setOnScroll { e->
             Record.next(e.deltaY < 0)
         }
+
+        pane.setOnKeyPressed { e: KeyEvent ->
+            println(e.code)
+            if (e.code.toString() == "BACK_SPACE") print("hoge")
+        }
+
+        canvas.setOnMousePressed { e ->
+            Record.add(Board.getClickedsign(
+                    e.sceneX - canvas.layoutX,
+                    e.sceneY - canvas.layoutY
+            ))
+        }
+
+        Tree.initTree(tree)
         Board.initCanvas(canvas)
-        View.initContents(graph, leaf, tree, genlabel)
+        Table.initTable(leaf)
+        Genmove.initGenmove(graph, genlabel)
     }
 
     @FXML fun handlePasteButton(e: ActionEvent){
@@ -53,7 +69,7 @@ class Controller : Initializable {
         Ponder.paste()
     }
     @FXML fun handlePonderButton(e: ActionEvent){
-        println("handlePasteButton")
+        println("handlePonderButton")
     }
     @FXML fun handleNewButton(e: ActionEvent){
         println("handlePasteButton")

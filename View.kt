@@ -1,13 +1,8 @@
-import java.util.Comparator
-import java.util.HashMap
-import java.util.TreeMap
-
 import javafx.beans.property.IntegerProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
-import javafx.collections.ObservableList
 import javafx.scene.canvas.Canvas
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.control.Label
@@ -16,64 +11,31 @@ import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
 import javafx.scene.paint.Color
 
-object View {
-    private lateinit var treeView: TreeView<*>
-    private lateinit var genlabel: Label
-    private lateinit var graph: Canvas
-    private lateinit var gc: GraphicsContext
-    private lateinit var leafView: TableView<Leaf>
 
-    private val tm = TreeMap<String, Tree>()
-    private val lecont = FXCollections.observableArrayList<Leaf>()
-
-    fun initContents(graph: Canvas, leafView: TableView<*>,
-                     treeView: TreeView<String>, genlabel: Label){
-        this.graph = graph
-        this.leafView = leafView as TableView<Leaf>
-        this.leafView.items = lecont
-        this.treeView = treeView
-        this.genlabel = genlabel
-        this.gc = graph.graphicsContext2D
-    }
-
-    fun getClickedbranch(ti: Any): String {
-        val tmp = ti as Tree
-        return tmp.id
-    }
-
-    fun addTree(key: String, br: Branch) {
-        val color = if (br.itisBlacks().next()) "●" else "○"
-        val move = br.itMoves().next()
-        val tr = Tree(br.hide.toString() + color + move, key)
-        tm[key] = tr
-        val tl: ObservableList<TreeItem<String>>
-        if (key.length == 3) {
-            tl = tm["0"]!!.children
-        } else {
-            tl = tm[key.substring(0, key.length - 3)]!!.children
-        }
-        tl.add(tr)
-        tl.sortWith(Comparator.comparing<TreeItem<String>, String> { t -> t.value })
-    }
-
-    fun makeLeaf(leaf: Int, br: Branch) {
-        lecont.clear()
-        val itb = br.itisBlacks()
-        val its = br.itMoves()
-        val nowhand = leaf
-        var i = 0
-        while (its.hasNext()) {
-            lecont.add(Leaf(br.hide + i, itb.next(), its.next()))
-            i++
-        }
-        leafView.selectionModel.select(leaf)
-    }
-
+object Genmove {
     /**
      * 予想手のラベルに評価値, 指し手を描画する.
      * Record.show()から呼ばれる.
      */
-    fun genmove(br: Branch) {
+    private lateinit var genlabel: Label
+    private lateinit var graph: Canvas
+    private lateinit var gc: GraphicsContext
+
+    var genmap = HashMap<Int, Branch>()
+    var isGenmove = false
+        set(isGenmove){
+            field = isGenmove && genmap.isNotEmpty()
+        }
+
+    fun initGenmove(graph: Canvas, genlabel: Label) {
+        this.genlabel = genlabel
+        this.graph = graph
+        gc = graph.graphicsContext2D
+    }
+
+    fun genmove(hash: Int) {
+        if (!isGenmove) return
+        val br = genmap[hash]!!
         var str = br.eval.toString() + ":"
         val its = br.itMoves()
         val itb = br.itisBlacks()
@@ -85,13 +47,16 @@ object View {
         genlabel.text = str
     }
 
+    fun getPonderMove(hand : Int) = genmap[hand + 1]!!.move
+
     /**
      * 評価値のグラフを描画する
      * Record.show()から呼ばれる.
      * @param hand 現在の手数
      * @param genmap 予想手の連想配列
      */
-    fun graph(hand: Int, genmap: HashMap<Int, Branch>) {
+    fun graph(hand: Int) {
+        if (!isGenmove) return
         val it = genmap.keys.iterator()
         val interval = 6.0
         gc.fill = Color.WHITE
@@ -111,28 +76,71 @@ object View {
         gc.lineWidth = 1.0
         gc.strokeLine(interval * hand, 0.0, interval * hand, graph.height)
     }
+}
 
-    internal fun setLeaf(leaf: Int) {
-        throw UnsupportedOperationException("Not supported yet.")
+
+object Table {
+    private lateinit var table: TableView<Leaf>
+    private val lecont = FXCollections.observableArrayList<Leaf>()
+
+    fun initTable(table: TableView<Leaf>){
+        this.table = table
+        this.table.items = lecont
     }
 
-    internal fun removeTree(branch: String) {
-        throw UnsupportedOperationException("Not supported yet.")
+    fun update(br: Branch) {
+        lecont.clear()
+        val itb = br.itisBlacks()
+        val its = br.itMoves()
+        var i = 0
+        while (its.hasNext()) {
+            lecont.add(Leaf(br.hide + i++, itb.next(), its.next()))
+        }
+        table.selectionModel.select(br.hand - br.hide)
     }
+}
 
-    private class Tree(text: String, val id: String) : TreeItem<String>(text)
+class Leaf(hand: Int, isblack: Boolean, move: String) {
+    private val handdisp: IntegerProperty
+    private val colordisp: StringProperty
+    private val pvdisp: StringProperty
+    fun handdispProperty(): IntegerProperty = handdisp
+    fun colordispProperty(): StringProperty = colordisp
+    fun pvdispProperty(): StringProperty = pvdisp
+    init {
+        this.handdisp = SimpleIntegerProperty(hand)
+        this.colordisp = SimpleStringProperty(if (isblack) "●" else "○")
+        this.pvdisp = SimpleStringProperty(move)
+    }
+}
 
-    private class Leaf(hand: Int, isblack: Boolean, move: String) {
-        private val handdisp: IntegerProperty
-        private val colordisp: StringProperty
-        private val pvdisp: StringProperty
-        fun handdispProperty(): IntegerProperty = handdisp
-        fun colordispProperty(): StringProperty = colordisp
-        fun pvdispProperty(): StringProperty = pvdisp
-        init {
-            this.handdisp = SimpleIntegerProperty(hand)
-            this.colordisp = SimpleStringProperty(if (isblack) "●" else "○")
-            this.pvdisp = SimpleStringProperty(move)
+object Tree {
+    private lateinit var tree: TreeView<String>
+    private lateinit var selected: TreeItem<String>
+
+    fun initTree(tree: TreeView<String>){
+        this.tree = tree
+        tree.root = TreeItem("本譜　　　　　　　　　　　　0")
+        tree.root.isExpanded = true
+        tree.selectionModel.select(0)
+        tree.selectionModel.selectedItemProperty().addListener { _ ->
+            selected = tree.selectionModel.selectedItem
+            Record.hash = selected.value.split("　").last().toInt()
         }
     }
+
+    fun addTree(br: Branch, hash: Int){
+        val hand = br.hide
+        val eval = br.eval
+        val isblack = if (br.isblack) "●" else "○"
+        val move = br.move
+        selected = tree.selectionModel.selectedItem
+        selected.children.add(TreeItem(
+                "$hand,　$eval,　$isblack$move　　　　　　　　　　$hash"
+        ))
+        tree.selectionModel.select(hash)
+        tree.root.children.sortWith(Comparator.comparing<TreeItem<String>, String> { t -> t.value })
+    }
+
+    fun delete(){ selected.parent.children.remove(selected) }
 }

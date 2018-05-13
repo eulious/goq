@@ -37,7 +37,6 @@ object Board {
      * @param kihublack 黒:true, 白:falseの動的配列. パスが渡されることは想定されていない.
      */
     fun makeboard(kihumove: Deque<String>, kihublack: Deque<Boolean>) {
-        println("goq.Board.make()")
         for (i in 0 until boardsize) {
             for (j in 0 until boardsize) {
                 board[i][j] = 0

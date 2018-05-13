@@ -123,7 +123,7 @@ object Ponder {
             genmap[hand] = br
             hand += 1
         }
-        Record.genmap = genmap
+        Genmove.genmap = genmap
     }
 
     fun search() : Branch{
