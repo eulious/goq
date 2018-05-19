@@ -10,6 +10,7 @@ import javafx.scene.control.TableView
 import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
 import javafx.scene.paint.Color
+import java.util.*
 
 
 object Genmove {
@@ -22,6 +23,12 @@ object Genmove {
     private lateinit var gc: GraphicsContext
 
     var genmap = HashMap<Int, Branch>()
+//        set(genmap){
+//            val dummy = Branch(0, 0, genmap[1]!!.isblacks, genmap[1]!!.moves)
+//            genmap[genmap.size + 1] = dummy
+//            field = genmap
+//        }
+
     var isGenmove = false
         set(isGenmove){
             field = isGenmove && genmap.isNotEmpty()
@@ -29,6 +36,9 @@ object Genmove {
 
     fun initGenmove(graph: Canvas, genlabel: Label) {
         this.genlabel = genlabel
+        genlabel.setOnMouseClicked {
+            Record.setPonderMoves(genmap[Record.br.hand]!!)
+        }
         this.graph = graph
         gc = graph.graphicsContext2D
     }
@@ -36,9 +46,10 @@ object Genmove {
     fun genmove(hash: Int) {
         if (!isGenmove) return
         val br = genmap[hash]!!
+        println(br.moves)
         var str = br.eval.toString() + ":"
-        val its = br.itMoves()
-        val itb = br.itisBlacks()
+        val its = br.moves.iterator()
+        val itb = br.isblacks.iterator()
         while (its.hasNext()) {
             str += if (itb.next()) " ●" else " ○"
             str += its.next()
@@ -69,7 +80,7 @@ object Genmove {
             var pos = interval * key
             gc.strokeLine(
                     pos, graph.height / 2,
-                    pos, graph.height / 2 * (1 - value.eval as Double / 1000.0)
+                    pos, graph.height / 2 * (1 - value.eval / 1000.0)
             )
             pos += interval
         }
@@ -96,7 +107,7 @@ object Table {
         while (its.hasNext()) {
             lecont.add(Leaf(br.hide + i++, itb.next(), its.next()))
         }
-        table.selectionModel.select(br.hand - br.hide)
+        table.selectionModel.select(br.hand - br.hide -1)
     }
 }
 
@@ -108,7 +119,7 @@ class Leaf(hand: Int, isblack: Boolean, move: String) {
     fun colordispProperty(): StringProperty = colordisp
     fun pvdispProperty(): StringProperty = pvdisp
     init {
-        this.handdisp = SimpleIntegerProperty(hand)
+        this.handdisp = SimpleIntegerProperty(hand + 1)
         this.colordisp = SimpleStringProperty(if (isblack) "●" else "○")
         this.pvdisp = SimpleStringProperty(move)
     }
@@ -130,7 +141,7 @@ object Tree {
     }
 
     fun addTree(br: Branch, hash: Int){
-        val hand = br.hide
+        val hand = br.hide + 1
         val eval = br.eval
         val isblack = if (br.isblack) "●" else "○"
         val move = br.move
@@ -138,6 +149,7 @@ object Tree {
         selected.children.add(TreeItem(
                 "$hand,　$eval,　$isblack$move　　　　　　　　　　$hash"
         ))
+        selected.isExpanded = true
         tree.selectionModel.select(hash)
         tree.root.children.sortWith(Comparator.comparing<TreeItem<String>, String> { t -> t.value })
     }

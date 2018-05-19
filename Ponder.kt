@@ -4,6 +4,13 @@ import java.io.InputStreamReader
 import java.util.ArrayDeque
 import java.util.Deque
 
+
+/**
+ * GTPプロトコルでやり取りを行うクラス. Singleton.
+ * 注意：Branch は枝ではなく, AIから返ってきた指し手・評価値を格納するものとして使用している.
+ *
+ * @author eulious
+ */
 object Ponder {
     private var isGote = false
     private var boardsize = 19
@@ -37,7 +44,7 @@ object Ponder {
         Record.setHonpu(moves, isblacks)
     }
 
-    fun gtp(sgf:String, lefttime:Double, isblack:Boolean): Pair<Double, Branch> {
+    private fun gtp(sgf:String, lefttime:Double, isblack:Boolean): Pair<Double, Branch> {
         val DIR = "."
 
         val correctALP = mapOf("A" to "A", "B" to "B", "C" to "C", "D" to "D",
@@ -83,7 +90,7 @@ object Ponder {
             (score.toDouble() - 50) * 20 else -(score.toDouble() - 50) * 20
         val moves : Deque<String> = ArrayDeque<String>()
         val isblacks : Deque<Boolean> = ArrayDeque<Boolean>()
-        var isblack1 = !isblack
+        var isblack1 = isblack
         pv.forEach { move ->
             if (move != "pass") {
                 moves.add(move)
@@ -96,8 +103,6 @@ object Ponder {
     }
 
     fun ponder() {
-        val (moves, isblacks) = Record.getNowBranch()
-
         // ponder
         val genmap = HashMap<Int, Branch>()
         var sgf = "(;GM[1]SZ[$boardsize]KM[${if (isGote) "6.5" else "7.5"}]RU[Chinese]"
@@ -105,8 +110,8 @@ object Ponder {
         var isblack = true
         var hand = 1
 
-        val itb = isblacks.iterator()
-        val its = moves.iterator()
+        val itb = Record.br.isblacks.iterator()
+        val its = Record.br.moves.iterator()
         while (itb.hasNext()) {
             if (isblack != itb.next()) { // パス
                 sgf += ";${if (isblack) "B" else "W"}[]"
@@ -120,17 +125,19 @@ object Ponder {
             val (tmp, br) = gtp(sgf, lefttime, isblack)
             lefttime = tmp
 
-            genmap[hand] = br
+
+            genmap[hand] = Branch(hand, br.eval, br.isblacks, br.moves)
             hand += 1
         }
         Genmove.genmap = genmap
+        Genmove.isGenmove = true
     }
 
-    fun search() : Branch{
-        val (moves, isblacks) = Record.getNowBranch()
+    fun search(){
+        val (moves, isblacks) = Record.getNotation()
 
         var sgf = "(;GM[1]SZ[$boardsize]KM[${if (isGote) "6.5" else "7.5"}]RU[Chinese]RE[B+R]"
-        val lefttime = 180.0
+        val lefttime = 10.0
         val itb = isblacks.iterator()
         val its = moves.iterator()
         var isblack = true
@@ -145,13 +152,14 @@ object Ponder {
             isblack = !isblack
         }
         val (_, br) = gtp(sgf, lefttime, isblack)
-        return br
+
+        Record.setSearch(br)
     }
 
-    fun f9a8b(c:Char) : String = (boardsize - c.toInt() + 145).toChar().toString()
-    fun readFile(file:String) = File(file).bufferedReader().use{it.readText()}
-    fun writeFile(file:String, str:String) = File(file).bufferedWriter().use{it.write(str)}
-    fun system(cmd: String) : Boolean {
+    private fun f9a8b(c:Char) : String = (boardsize - c.toInt() + 145).toChar().toString()
+    private fun readFile(file:String) = File(file).bufferedReader().use{it.readText()}
+    private fun writeFile(file:String, str:String) = File(file).bufferedWriter().use{it.write(str)}
+    private fun system(cmd: String) : Boolean {
         val commands = arrayOf("/bin/bash", "-c", cmd)
         val proc = Runtime.getRuntime().exec(commands)
         val stdInput = BufferedReader(InputStreamReader(proc.inputStream))

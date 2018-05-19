@@ -48,7 +48,11 @@ class Controller : Initializable {
 
         pane.setOnKeyPressed { e: KeyEvent ->
             println(e.code)
-            if (e.code.toString() == "BACK_SPACE") print("hoge")
+            when {
+                e.code.toString() == "BACK_SPACE" -> Tree.delete()
+                e.code.toString() == "UP" -> Record.next(true)
+                e.code.toString() == "DOWN" -> Record.next(false)
+            }
         }
 
         canvas.setOnMousePressed { e ->
@@ -70,8 +74,10 @@ class Controller : Initializable {
     }
     @FXML fun handlePonderButton(e: ActionEvent){
         println("handlePonderButton")
+        Ponder.ponder()
     }
     @FXML fun handleNewButton(e: ActionEvent){
         println("handlePasteButton")
+        Ponder.search()
     }
 }

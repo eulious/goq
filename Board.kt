@@ -33,8 +33,8 @@ object Board {
      * 他のクラスから盤面に石を置くにはこのメソッドを使う.
      * board[][] 黒: 1, 白: 0, 空点: 2 の配列.
      * @see "Record.show
-     * @param kihumove 指し手の動的配列. パスが渡されることは想定されていない.
-     * @param kihublack 黒:true, 白:falseの動的配列. パスが渡されることは想定されていない.
+     * @param kihumove 指し手の動的配列.
+     * @param kihublack 黒:true, 白:falseの動的配列.
      */
     fun makeboard(kihumove: Deque<String>, kihublack: Deque<Boolean>) {
         for (i in 0 until boardsize) {
@@ -129,21 +129,19 @@ object Board {
      * @see "Record.show
      */
     fun abc(a: String, b: String) {
-        println("goq.Board.abc()")
-        var posx: Int
-        var posy: Int
         gc.font = Font.font("Verdana", radius * 2.5)
         gc.fill = Color.BLACK
-        posx = a[0].toInt() - 65
-        posy = boardsize - Integer.parseInt(a.substring(1)) + 1
+        val ax = a[0].toInt() - 65
+        val bx = b[0].toInt() - 65
+        val ay = boardsize - Integer.parseInt(a.substring(1)) + 1
+        val by = boardsize - Integer.parseInt(b.substring(1)) + 1
+        println("$a, $b")
 
         if (a == b) {
-            gc.fillText("c", radius * (2 * posx + 0.25), radius * (2 * posy - 0.25))
+            gc.fillText("c", radius * (2 * ax + 0.25), radius * (2 * ay - 0.25))
         } else {
-            gc.fillText("a", radius * (2 * posx + 0.25), radius * (2 * posy - 0.25))
-            posx = b[0].toInt() - 65
-            posy = boardsize - Integer.parseInt(b.substring(1)) + 1
-            gc.fillText("b", radius * (2 * posx + 0.25), radius * (2 * posy - 0.25))
+            gc.fillText("a", radius * (2 * ax + 0.25), radius * (2 * ay - 0.25))
+            gc.fillText("b", radius * (2 * bx + 0.25), radius * (2 * by - 0.25))
         }
     }
 
@@ -154,7 +152,6 @@ object Board {
      * @return 符号, 例:"E13"
      */
     fun getClickedsign(x: Double, y: Double): String {
-        println("goq.Board.getclickedsign()")
         val posx = Math.round((x - radius) / (2 * radius)).toInt()
         val posy = Math.round((y - radius) / (2 * radius)).toInt()
         return (posx + 65).toChar() + (this.boardsize - posy).toString()

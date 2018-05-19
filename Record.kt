@@ -10,6 +10,7 @@ object Record {
             field = hash
             br = brdata[hash]
             Genmove.isGenmove = (hash == 0)
+            Table.update(br)
             makeboard()
         }
 
@@ -18,9 +19,9 @@ object Record {
      * @param isNext 下方向ならtrue 上方向ならfalse
      */
     fun next(isNext: Boolean) {
-        if (isNext && br.hand < br.moves.size - 1) {
+        if (isNext && br.hand < br.moves.size) {
             br.hand += 1
-        } else if (!isNext && br.hide < br.hand) {
+        } else if (!isNext && br.hide < br.hand-1) {
             br.hand -= 1
         } else {
             return
@@ -34,24 +35,24 @@ object Record {
      * @param sign クリックした符号
      */
     fun add(sign: String) {
-        if (br.hand != br.moves.size - 1) { // 新しい分岐を追加
-            val newmoves = ArrayDeque<String>()
-            val newisblacks = ArrayDeque<Boolean>()
-            val its = br.moves.iterator()
-            val itb = br.isblacks.iterator()
-            for (i in 0 until br.hand + 1) {
-                newmoves.add(its.next())
-                newisblacks.add(itb.next())
-            }
+        if (br.hand != br.moves.size) { // 新しい分岐を追加
+            val (newmoves, newisblacks) = getNotation()
             newisblacks.add(!newisblacks.last)
             newmoves.add(sign)
-            newBranch(Branch(br.hand + 1, 0, newisblacks, newmoves))
+
+            val newbr = Branch(br.hand, 0, newisblacks, newmoves)
+            newbr.hand += 1
+            brdata.add(newbr)
+            hash = brdata.lastIndex
+            Tree.addTree(newbr, brdata.lastIndex)
+            Table.update(newbr)
         } else {
             br.moves.add(sign)
             br.isblacks.add(!br.isblacks.last)
             br.hand += 1
+            Table.update(br)
         }
-        Table.update(br)
+        makeboard()
     }
 
     /**
@@ -59,38 +60,42 @@ object Record {
      * 盤面の更新, 予想手と実際の指し手の表示, 指し手リストの表示, 予想手の表示
      */
     private fun makeboard() {
-        val kihumove = ArrayDeque<String>()
-        val kihublack = ArrayDeque<Boolean>()
-        val its = br.moves.iterator()
-        val itb = br.isblacks.iterator()
-        for (i in 0 until br.hand) {
-            kihumove.add(its.next())
-            kihublack.add(itb.next())
-        }
-        Board.makeboard(kihumove, kihublack)
+        val (moves, isblacks) = getNotation()
+        Board.makeboard(moves, isblacks)
         if (Genmove.isGenmove) {
             // TODO : 最終手でArrayIndexOutOfBoundsException
+            val its = br.moves.iterator()
+            for (i in 1..br.hand) its.next()
             Board.abc(its.next(), Genmove.getPonderMove(br.hand))
-            Genmove.genmove(br.hand + 1)
+            Genmove.genmove(br.hand)
             Genmove.graph(br.hand)
         }
     }
 
-    fun adoptSearch(eval: Int, isblacks: Deque<Boolean>, moves: Deque<String>) {
-        val newmoves = ArrayDeque<String>()
-        val newisblacks = ArrayDeque<Boolean>()
-        val its = br.moves.iterator()
-        val itb = br.isblacks.iterator()
-        for (i in 0 until br.hand + 1) {
-            newmoves.add(its.next())
-            newisblacks.add(itb.next())
+    fun setPonderMoves(genbr : Branch){
+        val its = genbr.moves.iterator()
+        val itb = genbr.isblacks.iterator()
+        val (moves, isblacks) = getNotation()
+        while (its.hasNext()) {
+            moves.add(its.next())
+            isblacks.add(itb.next())
         }
-        newisblacks.addAll(isblacks)
-        newmoves.addAll(moves)
-        newBranch(Branch(br.hand, eval, newisblacks, newmoves))
+        val newbr = Branch(br.hand, genbr.eval, isblacks, moves)
+        brdata.add(newbr)
+        hash = brdata.lastIndex
+        Tree.addTree(newbr, brdata.lastIndex)
+        Table.update(newbr)
     }
 
-    private fun newBranch(newbr: Branch){
+    fun setSearch(searchbr: Branch) {
+        val its = searchbr.moves.iterator()
+        val itb = searchbr.isblacks.iterator()
+        val (moves, isblacks) = getNotation()
+        while (its.hasNext()) {
+            moves.add(its.next())
+            isblacks.add(itb.next())
+        }
+        val newbr = Branch(br.hand, searchbr.eval, isblacks, moves)
         brdata.add(newbr)
         hash = brdata.lastIndex
         Tree.addTree(newbr, brdata.lastIndex)
@@ -103,8 +108,16 @@ object Record {
         Table.update(Branch(0, 0, honpublack, honpu))
     }
 
-    fun getNowBranch(): Pair<Deque<String>, Deque<Boolean>> {
-        return Pair(br.moves, br.isblacks)
+    fun getNotation(): Pair<Deque<String>, Deque<Boolean>> {
+        val kihumove = ArrayDeque<String>()
+        val kihublack = ArrayDeque<Boolean>()
+        val its = br.moves.iterator()
+        val itb = br.isblacks.iterator()
+        for (i in 0 until br.hand) {
+            kihumove.add(its.next())
+            kihublack.add(itb.next())
+        }
+        return Pair(kihumove, kihublack)
     }
 }
 
