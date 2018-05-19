@@ -83,6 +83,7 @@ object Record {
         val newbr = Branch(br.hand, genbr.eval, isblacks, moves)
         brdata.add(newbr)
         hash = brdata.lastIndex
+        br.hand += 1
         Tree.addTree(newbr, brdata.lastIndex)
         Table.update(newbr)
     }
@@ -98,6 +99,7 @@ object Record {
         val newbr = Branch(br.hand, searchbr.eval, isblacks, moves)
         brdata.add(newbr)
         hash = brdata.lastIndex
+        br.hand += 1
         Tree.addTree(newbr, brdata.lastIndex)
         Table.update(newbr)
     }

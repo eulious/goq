@@ -135,7 +135,6 @@ object Board {
         val bx = b[0].toInt() - 65
         val ay = boardsize - Integer.parseInt(a.substring(1)) + 1
         val by = boardsize - Integer.parseInt(b.substring(1)) + 1
-        println("$a, $b")
 
         if (a == b) {
             gc.fillText("c", radius * (2 * ax + 0.25), radius * (2 * ay - 0.25))

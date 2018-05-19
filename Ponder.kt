@@ -106,7 +106,7 @@ object Ponder {
         // ponder
         val genmap = HashMap<Int, Branch>()
         var sgf = "(;GM[1]SZ[$boardsize]KM[${if (isGote) "6.5" else "7.5"}]RU[Chinese]"
-        var lefttime = 80.0
+        var lefttime = 90.0
         var isblack = true
         var hand = 1
 
@@ -124,13 +124,11 @@ object Ponder {
 
             val (tmp, br) = gtp(sgf, lefttime, isblack)
             lefttime = tmp
-
-
-            genmap[hand] = Branch(hand, br.eval, br.isblacks, br.moves)
-            hand += 1
+            genmap[hand++] = Branch(0, br.eval, br.isblacks, br.moves)
         }
         Genmove.genmap = genmap
         Genmove.isGenmove = true
+        system("rm test.*")
     }
 
     fun search(){
@@ -154,6 +152,7 @@ object Ponder {
         val (_, br) = gtp(sgf, lefttime, isblack)
 
         Record.setSearch(br)
+        system("rm test.*")
     }
 
     private fun f9a8b(c:Char) : String = (boardsize - c.toInt() + 145).toChar().toString()

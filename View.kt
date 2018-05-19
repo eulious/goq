@@ -10,25 +10,18 @@ import javafx.scene.control.TableView
 import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
 import javafx.scene.paint.Color
-import java.util.*
 
 
+/**
+ * 予想手のラベルに評価値, 指し手を描画する.
+ * Record.show()から呼ばれる.
+ */
 object Genmove {
-    /**
-     * 予想手のラベルに評価値, 指し手を描画する.
-     * Record.show()から呼ばれる.
-     */
     private lateinit var genlabel: Label
     private lateinit var graph: Canvas
     private lateinit var gc: GraphicsContext
 
     var genmap = HashMap<Int, Branch>()
-//        set(genmap){
-//            val dummy = Branch(0, 0, genmap[1]!!.isblacks, genmap[1]!!.moves)
-//            genmap[genmap.size + 1] = dummy
-//            field = genmap
-//        }
-
     var isGenmove = false
         set(isGenmove){
             field = isGenmove && genmap.isNotEmpty()
@@ -46,7 +39,6 @@ object Genmove {
     fun genmove(hash: Int) {
         if (!isGenmove) return
         val br = genmap[hash]!!
-        println(br.moves)
         var str = br.eval.toString() + ":"
         val its = br.moves.iterator()
         val itb = br.isblacks.iterator()
@@ -58,7 +50,7 @@ object Genmove {
         genlabel.text = str
     }
 
-    fun getPonderMove(hand : Int) = genmap[hand + 1]!!.move
+    fun getPonderMove(hand : Int) = genmap[hand]!!.move
 
     /**
      * 評価値のグラフを描画する

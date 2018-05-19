@@ -3,11 +3,13 @@ import javafx.event.ActionEvent
 import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
 import javafx.stage.Stage
-
 import javafx.fxml.FXML
 import javafx.fxml.Initializable
 import javafx.scene.canvas.Canvas
-import javafx.scene.control.*
+import javafx.scene.control.Label
+import javafx.scene.control.TableColumn
+import javafx.scene.control.TableView
+import javafx.scene.control.TreeView
 import java.net.URL
 import javafx.scene.control.cell.PropertyValueFactory
 import javafx.scene.input.KeyEvent
