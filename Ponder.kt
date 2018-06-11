@@ -3,6 +3,7 @@ import java.io.File
 import java.io.InputStreamReader
 import java.util.ArrayDeque
 import java.util.Deque
+import javax.script.ScriptEngineManager
 
 
 /**
@@ -106,7 +107,8 @@ object Ponder {
         // ponder
         val genmap = HashMap<Int, Branch>()
         var sgf = "(;GM[1]SZ[$boardsize]KM[${if (isGote) "6.5" else "7.5"}]RU[Chinese]"
-        var lefttime = 90.0
+        var lefttime = decordJson("ponder").toDouble()
+        println(lefttime)
         var isblack = true
         var hand = 1
 
@@ -135,7 +137,8 @@ object Ponder {
         val (moves, isblacks) = Record.getNotation()
 
         var sgf = "(;GM[1]SZ[$boardsize]KM[${if (isGote) "6.5" else "7.5"}]RU[Chinese]RE[B+R]"
-        val lefttime = 10.0
+        val lefttime = decordJson("search").toDouble()
+        println(lefttime)
         val itb = isblacks.iterator()
         val its = moves.iterator()
         var isblack = true
@@ -166,5 +169,11 @@ object Ponder {
         for (s in stdInput.lines()) System.out.println(s)
         for (s in stdError.lines()) System.err.println(s)
         return proc.waitFor() == 0
+    }
+    private fun decordJson(key: String) : String {
+        val json = readFile("sample.json").replace("\n", "")
+        val m = ScriptEngineManager().getEngineByName("javascript")
+                .eval("JSON.parse('$json')") as Map<*,*>
+        return m[key]!!.toString()
     }
 }
